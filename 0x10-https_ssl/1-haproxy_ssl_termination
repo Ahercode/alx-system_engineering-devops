@@ -13,9 +13,8 @@ global
         crt-base /etc/ssl/private
 
         # See: https://ssl-config.mozilla.org/#server=haproxy&server-version=2.0.3&config=intermediate
-        ssl-default-bind-ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384
-        ssl-default-bind-ciphersuites TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256
-        ssl-default-bind-options ssl-min-ver TLSv1.2 no-tls-tickets
+        ssl-default-bind-ciphers ECDH+AESGCM:DH+AESGCM:ECDH+AES256:DH+AES256:ECDH+AES128:DH+AES:RSA+AESGCM:RSA+AES:!aNULL:!MD5:!DSS
+        ssl-default-bind-options no-sslv3
 
 defaults
         log     global
@@ -32,12 +31,19 @@ defaults
         errorfile 502 /etc/haproxy/errors/502.http
         errorfile 503 /etc/haproxy/errors/503.http
         errorfile 504 /etc/haproxy/errors/504.http
-listen thelaura
-bind :80
-listen load_balancer 0.0.0.0:80
-        mode http
+        
+frontend http
+        bind *:80
+        http-request set-header X-Forwarded-Proto http
+        default_backend web-backend
+
+frontend www-https
+        bind *:443 ssl crt /etc/haproxy/ssl/www.luisch.tech.pem
+        http-request set-header X-Forwarded-Proto https
+        default_backend web-backend
+
+backend web-backend
         balance roundrobin
-        option forwardfor
-        option httpclose
+        redirect scheme https if !{ ssl_fc }
         server 22471-web-01 44.200.21.97:80 check
         server 22471-web-02 44.210.70.225:80 check
