@@ -36,7 +36,10 @@ defaults
         errorfile 502 /etc/haproxy/errors/502.http
         errorfile 503 /etc/haproxy/errors/503.http
         errorfile 504 /etc/haproxy/errors/504.http
+<<<<<<< HEAD
 
+=======
+>>>>>>> eb5199f6c91a6a9df4dc16778da721d7e3467d06
 frontend http
         bind *:80
         http-request set-header X-Forwarded-Proto http
